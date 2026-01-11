@@ -22,7 +22,7 @@ NOTION_TOKEN = os.getenv('NOTION_TOKEN')
 NOTION_HEALTH_DATABASE_ID = os.getenv('NOTION_HEALTH_DATABASE_ID')
 
 # Number of days to fetch (default: yesterday only, change to fetch more history)
-DAYS_BACK = int(os.getenv('HEALTH_DAYS_BACK', 7))
+DAYS_BACK = int(os.getenv('HEALTH_DAYS_BACK', 1))
 
 
 def check_credentials():
@@ -80,32 +80,38 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
             }
         }
         
-        # Add HRV data if available
-        if hrv_data:
-            logger.info(f"  HRV data: {hrv_data}")
-            if 'lastNightAvg' in hrv_data and hrv_data['lastNightAvg'] is not None:
+        # Add HRV data if available (nested under hrvSummary)
+        if hrv_data and 'hrvSummary' in hrv_data:
+            hrv_summary = hrv_data['hrvSummary']
+            logger.info(f"  HRV summary: {hrv_summary}")
+            
+            if 'lastNightAvg' in hrv_summary and hrv_summary['lastNightAvg'] is not None:
                 properties["Last Night HRV"] = {
-                    "number": hrv_data['lastNightAvg']
+                    "number": hrv_summary['lastNightAvg']
                 }
-            if 'weeklyAvg' in hrv_data and hrv_data['weeklyAvg'] is not None:
+            if 'weeklyAvg' in hrv_summary and hrv_summary['weeklyAvg'] is not None:
                 properties["Weekly Avg HRV"] = {
-                    "number": hrv_data['weeklyAvg']
+                    "number": hrv_summary['weeklyAvg']
                 }
-            if 'status' in hrv_data and hrv_data['status'] is not None:
+            if 'status' in hrv_summary and hrv_summary['status'] is not None:
                 properties["HRV Status"] = {
                     "rich_text": [{
                         "text": {
-                            "content": str(hrv_data['status'])
+                            "content": str(hrv_summary['status'])
                         }
                     }]
                 }
         
-        # Add Resting Heart Rate if available
-        if rhr_data:
-            logger.info(f"  RHR data: {rhr_data}")
-            if 'restingHeartRate' in rhr_data and rhr_data['restingHeartRate'] is not None:
+        # Add Resting Heart Rate if available (nested structure)
+        if rhr_data and 'allMetrics' in rhr_data:
+            logger.info(f"  RHR metrics: {rhr_data.get('allMetrics', {})}")
+            metrics_map = rhr_data.get('allMetrics', {}).get('metricsMap', {})
+            rhr_list = metrics_map.get('WELLNESS_RESTING_HEART_RATE', [])
+            
+            if rhr_list and len(rhr_list) > 0 and 'value' in rhr_list[0]:
+                rhr_value = rhr_list[0]['value']
                 properties["Resting Heart Rate"] = {
-                    "number": rhr_data['restingHeartRate']
+                    "number": int(rhr_value)
                 }
         
         # Add VO2 Max data if available
@@ -144,30 +150,36 @@ def update_notion_entry(notion_client, page_id, hrv_data, rhr_data, vo2_data):
         # Prepare properties
         properties = {}
         
-        # Add HRV data if available
-        if hrv_data:
-            if 'lastNightAvg' in hrv_data and hrv_data['lastNightAvg'] is not None:
+        # Add HRV data if available (nested under hrvSummary)
+        if hrv_data and 'hrvSummary' in hrv_data:
+            hrv_summary = hrv_data['hrvSummary']
+            
+            if 'lastNightAvg' in hrv_summary and hrv_summary['lastNightAvg'] is not None:
                 properties["Last Night HRV"] = {
-                    "number": hrv_data['lastNightAvg']
+                    "number": hrv_summary['lastNightAvg']
                 }
-            if 'weeklyAvg' in hrv_data and hrv_data['weeklyAvg'] is not None:
+            if 'weeklyAvg' in hrv_summary and hrv_summary['weeklyAvg'] is not None:
                 properties["Weekly Avg HRV"] = {
-                    "number": hrv_data['weeklyAvg']
+                    "number": hrv_summary['weeklyAvg']
                 }
-            if 'status' in hrv_data and hrv_data['status'] is not None:
+            if 'status' in hrv_summary and hrv_summary['status'] is not None:
                 properties["HRV Status"] = {
                     "rich_text": [{
                         "text": {
-                            "content": str(hrv_data['status'])
+                            "content": str(hrv_summary['status'])
                         }
                     }]
                 }
         
-        # Add Resting Heart Rate if available
-        if rhr_data:
-            if 'restingHeartRate' in rhr_data and rhr_data['restingHeartRate'] is not None:
+        # Add Resting Heart Rate if available (nested structure)
+        if rhr_data and 'allMetrics' in rhr_data:
+            metrics_map = rhr_data.get('allMetrics', {}).get('metricsMap', {})
+            rhr_list = metrics_map.get('WELLNESS_RESTING_HEART_RATE', [])
+            
+            if rhr_list and len(rhr_list) > 0 and 'value' in rhr_list[0]:
+                rhr_value = rhr_list[0]['value']
                 properties["Resting Heart Rate"] = {
-                    "number": rhr_data['restingHeartRate']
+                    "number": int(rhr_value)
                 }
         
         # Add VO2 Max data if available
