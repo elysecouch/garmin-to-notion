@@ -52,16 +52,19 @@ def connect_garmin():
 def entry_exists(notion_client, database_id, date_str):
     """Check if an entry for this date already exists in Notion."""
     try:
-        results = notion_client.databases.query(
-            database_id=database_id,
-            filter={
-                "property": "Date",
-                "date": {
-                    "equals": date_str
+        # Query the database for entries with this date
+        response = notion_client.databases.query(
+            **{
+                "database_id": database_id,
+                "filter": {
+                    "property": "Date",
+                    "date": {
+                        "equals": date_str
+                    }
                 }
             }
         )
-        return results.get('results', [])
+        return response.get('results', [])
     except Exception as e:
         logger.error(f"Error checking existing entries: {e}")
         return []
@@ -70,7 +73,7 @@ def entry_exists(notion_client, database_id, date_str):
 def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data, vo2_data):
     """Create a new entry in Notion database."""
     try:
-        # Prepare properties
+        # Prepare properties - start with the Date
         properties = {
             "Date": {
                 "date": {
@@ -81,44 +84,50 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
         
         # Add HRV data if available
         if hrv_data:
-            if hrv_data.get('lastNightAverage'):
+            logger.info(f"  HRV data: {hrv_data}")
+            if 'lastNightAverage' in hrv_data and hrv_data['lastNightAverage'] is not None:
                 properties["Last Night HRV"] = {
                     "number": hrv_data['lastNightAverage']
                 }
-            if hrv_data.get('weeklyAverage'):
+            if 'weeklyAverage' in hrv_data and hrv_data['weeklyAverage'] is not None:
                 properties["Weekly Avg HRV"] = {
                     "number": hrv_data['weeklyAverage']
                 }
-            if hrv_data.get('status'):
+            if 'status' in hrv_data and hrv_data['status'] is not None:
                 properties["HRV Status"] = {
                     "rich_text": [{
                         "text": {
-                            "content": hrv_data['status']
+                            "content": str(hrv_data['status'])
                         }
                     }]
                 }
         
         # Add Resting Heart Rate if available
-        if rhr_data and rhr_data.get('restingHeartRate'):
-            properties["Resting Heart Rate"] = {
-                "number": rhr_data['restingHeartRate']
-            }
+        if rhr_data:
+            logger.info(f"  RHR data: {rhr_data}")
+            if 'restingHeartRate' in rhr_data and rhr_data['restingHeartRate'] is not None:
+                properties["Resting Heart Rate"] = {
+                    "number": rhr_data['restingHeartRate']
+                }
         
         # Add VO2 Max data if available
         if vo2_data:
-            if vo2_data.get('vo2MaxValue'):
+            logger.info(f"  VO2 data: {vo2_data}")
+            if 'vo2MaxValue' in vo2_data and vo2_data['vo2MaxValue'] is not None:
                 properties["VO2 Max"] = {
                     "number": vo2_data['vo2MaxValue']
                 }
-            if vo2_data.get('fitnessAge'):
+            if 'fitnessAge' in vo2_data and vo2_data['fitnessAge'] is not None:
                 properties["Fitness Age"] = {
                     "number": vo2_data['fitnessAge']
                 }
         
         # Create the page
         notion_client.pages.create(
-            parent={"database_id": database_id},
-            properties=properties
+            **{
+                "parent": {"database_id": database_id},
+                "properties": properties
+            }
         )
         
         logger.info(f"✓ Created entry for {date_str}")
@@ -126,6 +135,8 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
         
     except Exception as e:
         logger.error(f"Error creating Notion entry for {date_str}: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return False
 
 
@@ -137,44 +148,47 @@ def update_notion_entry(notion_client, page_id, hrv_data, rhr_data, vo2_data):
         
         # Add HRV data if available
         if hrv_data:
-            if hrv_data.get('lastNightAverage'):
+            if 'lastNightAverage' in hrv_data and hrv_data['lastNightAverage'] is not None:
                 properties["Last Night HRV"] = {
                     "number": hrv_data['lastNightAverage']
                 }
-            if hrv_data.get('weeklyAverage'):
+            if 'weeklyAverage' in hrv_data and hrv_data['weeklyAverage'] is not None:
                 properties["Weekly Avg HRV"] = {
                     "number": hrv_data['weeklyAverage']
                 }
-            if hrv_data.get('status'):
+            if 'status' in hrv_data and hrv_data['status'] is not None:
                 properties["HRV Status"] = {
                     "rich_text": [{
                         "text": {
-                            "content": hrv_data['status']
+                            "content": str(hrv_data['status'])
                         }
                     }]
                 }
         
         # Add Resting Heart Rate if available
-        if rhr_data and rhr_data.get('restingHeartRate'):
-            properties["Resting Heart Rate"] = {
-                "number": rhr_data['restingHeartRate']
-            }
+        if rhr_data:
+            if 'restingHeartRate' in rhr_data and rhr_data['restingHeartRate'] is not None:
+                properties["Resting Heart Rate"] = {
+                    "number": rhr_data['restingHeartRate']
+                }
         
         # Add VO2 Max data if available
         if vo2_data:
-            if vo2_data.get('vo2MaxValue'):
+            if 'vo2MaxValue' in vo2_data and vo2_data['vo2MaxValue'] is not None:
                 properties["VO2 Max"] = {
                     "number": vo2_data['vo2MaxValue']
                 }
-            if vo2_data.get('fitnessAge'):
+            if 'fitnessAge' in vo2_data and vo2_data['fitnessAge'] is not None:
                 properties["Fitness Age"] = {
                     "number": vo2_data['fitnessAge']
                 }
         
         # Update the page
         notion_client.pages.update(
-            page_id=page_id,
-            properties=properties
+            **{
+                "page_id": page_id,
+                "properties": properties
+            }
         )
         
         return True
@@ -256,6 +270,8 @@ def main():
                     
         except Exception as e:
             logger.error(f"  ✗ Error processing {date_str}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             error_count += 1
     
     # Summary
