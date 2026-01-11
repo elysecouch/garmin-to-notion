@@ -22,7 +22,7 @@ NOTION_TOKEN = os.getenv('NOTION_TOKEN')
 NOTION_HEALTH_DATABASE_ID = os.getenv('NOTION_HEALTH_DATABASE_ID')
 
 # Number of days to fetch (default: yesterday only, change to fetch more history)
-DAYS_BACK = int(os.getenv('HEALTH_DAYS_BACK', 1))
+DAYS_BACK = int(os.getenv('HEALTH_DAYS_BACK', 7))
 
 
 def check_credentials():
@@ -83,13 +83,13 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
         # Add HRV data if available
         if hrv_data:
             logger.info(f"  HRV data: {hrv_data}")
-            if 'lastNightAverage' in hrv_data and hrv_data['lastNightAverage'] is not None:
+            if 'lastNightAvg' in hrv_data and hrv_data['lastNightAvg'] is not None:
                 properties["Last Night HRV"] = {
-                    "number": hrv_data['lastNightAverage']
+                    "number": hrv_data['lastNightAvg']
                 }
-            if 'weeklyAverage' in hrv_data and hrv_data['weeklyAverage'] is not None:
+            if 'weeklyAvg' in hrv_data and hrv_data['weeklyAvg'] is not None:
                 properties["Weekly Avg HRV"] = {
-                    "number": hrv_data['weeklyAverage']
+                    "number": hrv_data['weeklyAvg']
                 }
             if 'status' in hrv_data and hrv_data['status'] is not None:
                 properties["HRV Status"] = {
@@ -146,13 +146,13 @@ def update_notion_entry(notion_client, page_id, hrv_data, rhr_data, vo2_data):
         
         # Add HRV data if available
         if hrv_data:
-            if 'lastNightAverage' in hrv_data and hrv_data['lastNightAverage'] is not None:
+            if 'lastNightAvg' in hrv_data and hrv_data['lastNightAvg'] is not None:
                 properties["Last Night HRV"] = {
-                    "number": hrv_data['lastNightAverage']
+                    "number": hrv_data['lastNightAvg']
                 }
-            if 'weeklyAverage' in hrv_data and hrv_data['weeklyAverage'] is not None:
+            if 'weeklyAvg' in hrv_data and hrv_data['weeklyAvg'] is not None:
                 properties["Weekly Avg HRV"] = {
-                    "number": hrv_data['weeklyAverage']
+                    "number": hrv_data['weeklyAvg']
                 }
             if 'status' in hrv_data and hrv_data['status'] is not None:
                 properties["HRV Status"] = {
