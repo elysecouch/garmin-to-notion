@@ -52,19 +52,17 @@ def connect_garmin():
 def entry_exists(notion_client, database_id, date_str):
     """Check if an entry for this date already exists in Notion."""
     try:
-        # Query the database for entries with this date
-        response = notion_client.databases.query(
-            **{
-                "database_id": database_id,
-                "filter": {
-                    "property": "Date",
-                    "date": {
-                        "equals": date_str
-                    }
+        # Query the database for entries with this date (matching original pattern)
+        query = notion_client.databases.query(
+            database_id=database_id,
+            filter={
+                "property": "Date",
+                "date": {
+                    "equals": date_str
                 }
             }
         )
-        return response.get('results', [])
+        return query.get('results', [])
     except Exception as e:
         logger.error(f"Error checking existing entries: {e}")
         return []
@@ -122,13 +120,13 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
                     "number": vo2_data['fitnessAge']
                 }
         
-        # Create the page
-        notion_client.pages.create(
-            **{
-                "parent": {"database_id": database_id},
-                "properties": properties
-            }
-        )
+        # Create the page (matching original pattern with ** unpacking)
+        page = {
+            "parent": {"database_id": database_id},
+            "properties": properties
+        }
+        
+        notion_client.pages.create(**page)
         
         logger.info(f"✓ Created entry for {date_str}")
         return True
@@ -183,13 +181,13 @@ def update_notion_entry(notion_client, page_id, hrv_data, rhr_data, vo2_data):
                     "number": vo2_data['fitnessAge']
                 }
         
-        # Update the page
-        notion_client.pages.update(
-            **{
-                "page_id": page_id,
-                "properties": properties
-            }
-        )
+        # Update the page (matching original pattern with ** unpacking)
+        update = {
+            "page_id": page_id,
+            "properties": properties
+        }
+        
+        notion_client.pages.update(**update)
         
         return True
         
