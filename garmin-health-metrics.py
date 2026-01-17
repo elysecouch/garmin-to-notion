@@ -95,9 +95,11 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
                 }
             if 'status' in hrv_summary and hrv_summary['status'] is not None:
                 properties["HRV Status"] = {
-                    "select": {
-                        "name": str(hrv_summary['status'])
-                    }
+                    "rich_text": [{
+                        "text": {
+                            "content": str(hrv_summary['status'])
+                        }
+                    }]
                 }
         
         # Add Resting Heart Rate if available (nested structure)
@@ -114,7 +116,7 @@ def create_notion_entry(notion_client, database_id, date_str, hrv_data, rhr_data
         
         # Add VO2 Max data if available
         if vo2_data:
-            logger.info(f"  VO2 Max full data: {vo2_data}")
+            logger.info(f"  VO2 data: {vo2_data}")
             if 'vo2MaxValue' in vo2_data and vo2_data['vo2MaxValue'] is not None:
                 properties["VO2 Max"] = {
                     "number": vo2_data['vo2MaxValue']
@@ -162,9 +164,11 @@ def update_notion_entry(notion_client, page_id, hrv_data, rhr_data, vo2_data):
                 }
             if 'status' in hrv_summary and hrv_summary['status'] is not None:
                 properties["HRV Status"] = {
-                    "select": {
-                        "name": str(hrv_summary['status'])
-                    }
+                    "rich_text": [{
+                        "text": {
+                            "content": str(hrv_summary['status'])
+                        }
+                    }]
                 }
         
         # Add Resting Heart Rate if available (nested structure)
@@ -247,9 +251,6 @@ def main():
             try:
                 vo2_data = garmin_client.get_max_metrics(date_str)
                 logger.info(f"  ✓ VO2 Max data retrieved")
-                logger.info(f"  VO2 RAW DATA: {vo2_data}")
-                if vo2_data:
-                    logger.info(f"  VO2 data keys: {vo2_data.keys()}")
             except Exception as e:
                 logger.warning(f"  ⚠ Could not fetch VO2 Max data: {e}")
             
