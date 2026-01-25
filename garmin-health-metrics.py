@@ -22,7 +22,7 @@ NOTION_TOKEN = os.getenv('NOTION_TOKEN')
 NOTION_HEALTH_DATABASE_ID = os.getenv('NOTION_HEALTH_DATABASE_ID')
 
 # Number of days to fetch (default: yesterday only, change to fetch more history)
-DAYS_BACK = int(os.getenv('HEALTH_DAYS_BACK', 1))
+DAYS_BACK = int(os.getenv('HEALTH_DAYS_BACK', 2))
 
 
 def check_credentials():
