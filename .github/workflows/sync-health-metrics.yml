@@ -2,7 +2,7 @@ name: Sync Health Metrics
 
 on:
   schedule:
-    - cron: '1 13 * * *'   # Daily at 8 AM EST 
+    - cron: '30 13 * * *'   # Daily at 8 AM EST 
   workflow_dispatch:  # Allows manual trigger
 
 env:
