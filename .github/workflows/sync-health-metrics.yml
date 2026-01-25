@@ -31,6 +31,6 @@ jobs:
           GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_HEALTH_DATABASE_ID: ${{ secrets.NOTION_HEALTH_DATABASE_ID }}
-          HEALTH_DAYS_BACK: 1  # Change to fetch more days of history
+          HEALTH_DAYS_BACK: 2  # Change to fetch more days of history
         run: |
           python garmin-health-metrics.py
