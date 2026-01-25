@@ -2,7 +2,7 @@ name: Sync Health Metrics
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # Daily at 9 AM UTC (adjust to your preference)
+    - cron: '1 13 * * *'   # Daily at 8 AM EST 
   workflow_dispatch:  # Allows manual trigger
 
 env:
@@ -31,6 +31,6 @@ jobs:
           GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_HEALTH_DATABASE_ID: ${{ secrets.NOTION_HEALTH_DATABASE_ID }}
-          HEALTH_DAYS_BACK: 2  # Change to fetch more days of history
+          HEALTH_DAYS_BACK: 1  # Change to fetch more days of history
         run: |
           python garmin-health-metrics.py
