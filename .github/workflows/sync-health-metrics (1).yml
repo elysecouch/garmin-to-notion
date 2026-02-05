@@ -1,0 +1,36 @@
+name: Sync Health Metrics
+
+on:
+  schedule:
+    - cron: '30 13 * * *'   # Daily at 8 AM EST 
+  workflow_dispatch:  # Allows manual trigger
+
+env:
+  TZ: 'America/Montreal'
+
+jobs:
+  sync-health-metrics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install garminconnect notion-client
+      
+      - name: Sync Health Metrics
+        env:
+          GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_HEALTH_DATABASE_ID: ${{ secrets.NOTION_HEALTH_DATABASE_ID }}
+          HEALTH_DAYS_BACK: 1  # Change to fetch more days of history
+        run: |
+          python garmin-health-metrics.py
